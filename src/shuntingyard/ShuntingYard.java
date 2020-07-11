@@ -3,83 +3,107 @@ package shuntingyard;
 import java.util.Stack;
 
 public class ShuntingYard {
-	static int precedence(char c) {
-		switch (c) {
-		case '+':
-		case '-':
-			return 1;
-		case '*':
-		case '/':
-			return 2;
-		case '^':
-			return 3;
-		}
-		return -1;
-	}
-
-	static String infixToPostFix(String expression) {
-
-		String result = "";
-		Stack<Character> stack = new Stack<>();
-		for (int i = 0; i < expression.length(); i++) {
-			char c = expression.charAt(i);
-
-			// check if char is operator
-			if (precedence(c) > 0) {
-				while (stack.isEmpty() == false && precedence(stack.peek()) >= precedence(c)) {
-					result += stack.pop();
-				}
-				stack.push(c);
-			} else if (c == ')') {
-				char x = stack.pop();
-				while (x != '(') {
-					result += x;
-					x = stack.pop();
-				}
-			} else if (c == '(') {
-				stack.push(c);
-			} else {
-				// character is neither operator nor (
-				result += c;
-			}
-		}
-		for (int i = 0; i <= stack.size(); i++) {
-			result += stack.pop();
+	public int power(int x, int y) {
+		int result = 1;
+		while (y != 0) {
+			result *= x;
+			y--;
 		}
 		return result;
 	}
 
-	public int result(int n1, int n2, String op) {
-		if (op.equals("+"))
-			return n1 + n2;
-		if (op.equals("-"))
-			return n1 - n2;
-		if (op.equals("*"))
-			return n1 * n2;
-		return n1 / n2;
-	}
-
-	public boolean operator(String op) {
-		return op.equals("+") || op.equals("-") || op.equals("*") || op.equals("/");
-	}
-
-	public int evalRPN(String tokens) {
-		Stack<Integer> stack = new Stack<>();
-		for (int i = 0; i < tokens.length(); i++) {
-			if (operator(tokens.charAt(i))) {
-				int n2 = stack.pop();
-				int n1 = stack.pop();
-				stack.push(result(n1, n2, tokens[i]));
-			} else
-				stack.push(Integer.parseInt(tokens[i]));
+	public int postfixToEvaluation(String s) {
+		Stack<Integer> st = new Stack<Integer>();
+		int x = 0, y = 0;
+		char ch[] = s.toCharArray();
+		for (char c : ch) {
+			if (c >= '0' && c <= '9') {
+				st.push((int) (c - '0'));
+			} else {
+				y = st.pop();
+				x = st.pop();
+				switch (c) {
+				case '+':
+					st.push(x + y);
+					break;
+				case '-':
+					st.push(x - y);
+					break;
+				case '*':
+					st.push(x * y);
+					break;
+				case '/':
+					st.push(x / y);
+					break;
+				case '^':
+					st.push(power(x, y));
+					break;
+				}
+			}
 		}
-		return stack.peek();
+		return st.pop();
 	}
 
-	public static void main(String[] args) {
-		String exp = "3+(2+1)*2^3^2-8/(5-1*2/2)";
-		System.out.println("Infix Expression: " + exp);
-		System.out.println("Postfix Expression: " + infixToPostFix(exp));
-		System.out.println("postfix evaluation: " + evalRPN(exp));
+	public String infixToPostfix(String s) {
+		Stack<Character> st = new Stack<Character>();
+		String postfix = "";
+		char ch[] = s.toCharArray();
+
+		for (char c : ch) {
+			if (c != '+' && c != '-' && c != '*' && c != '/' && c != '^' && c != '(' && c != ')') {
+				postfix = postfix + c;
+			} else if (c == '(') {
+				st.push(c);
+			} else if (c == ')') {
+				while (!st.isEmpty()) {
+					char t = st.pop();
+					if (t != '(') {
+						postfix = postfix + t;
+					} else {
+						break;
+					}
+				}
+			} else if (c == '+' || c == '-' || c == '*' || c == '/' || c == '^') {
+				if (st.isEmpty()) {
+					st.push(c);
+				} else {
+					while (!st.isEmpty()) {
+						char t = st.pop();
+						if (t == '(') {
+							st.push(t);
+							break;
+						} else if (t == '+' || t == '-' || t == '*' || t == '/' || t == '^') {
+							if (getPriority(t) < getPriority(c)) {
+								st.push(t);
+								break;
+							} else {
+								postfix = postfix + t;
+							}
+						}
+					}
+					st.push(c);
+				}
+			}
+		}
+		while (!st.isEmpty()) {
+			postfix = postfix + st.pop();
+		}
+		return postfix;
+	}
+
+	public int getPriority(char ch) {
+		switch (ch) {
+		case '+':
+		case '-':
+			return 11;
+
+		case '*':
+		case '/':
+			return 12;
+
+		case '^':
+			return 13;
+		}
+		return -1;
 	}
 }
